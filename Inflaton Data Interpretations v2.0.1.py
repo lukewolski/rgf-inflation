@@ -25,7 +25,7 @@ from scipy.interpolate import interp1d
 from scipy.integrate import quad
 mpl.rcParams['mathtext.fontset'] = 'stix'
 mpl.rcParams['font.family'] = 'STIXGeneral'
-saveImagesHere = "/Users/cap/.spyder-py3/Saved Figures"
+saveImagesHere = "/Users/lwolski/Downloads"
 
 
 
@@ -62,7 +62,7 @@ IMPORT SIMULATION OUTPUT
 
 
 
-path = "/Users/cap/.spyder-py3/megatest_09-21-21"
+path = "/Users/lwolski/Documents/Inflation Principled Forgetting Files/megatest1_07-08-25"
 
 
 
@@ -151,14 +151,14 @@ class Model():
         if i is None: i = np.arange(self.n_shells)
         if isinstance(i, int): i = [i]
         
-        data = np.zeros((len(i), self.maxrows))
+        data = np.empty((len(i), self.maxrows),dtype=object)
         data[:] = np.nan
-        
+
         if q in self.df[0].columns:
-            
-            for j in range(len(i)): 
+
+            for j in range(len(i)):
                 this = self.df[i[j]][q]
-                data[j][:len(this)] = this
+                data[j][:len(this)] = np.array(this)
         
         elif q=='r_iso':
             try: data = self.r_iso
@@ -176,7 +176,9 @@ class Model():
                 self.beta_iso = A_iso/(A_s + A_iso)
                 data = self.beta_iso
         
-        if log10: data = np.log10(data)
+        if log10:
+            data = np.float32(data)
+            data = np.log10(data)
         if nan_outliers and q in D: 
             domain = np.log10(D[q]) if log10 else D[q]
             data = np.where((data<domain[0]) | (data>=domain[1]), np.nan, data)
@@ -192,6 +194,7 @@ class Model():
         if log10 is None: log10 = (q in logit)
         
         data = self.get(q, i, log10)
+        data = np.float32(data)
         mu = np.nanmean(data, axis=1)
         var = np.nanstd(data, axis=1)**2
         
@@ -238,7 +241,7 @@ class Model():
         
         dpi = kwargs.pop('dpi', 400)
         bins = kwargs.pop('bins', 100)
-        save = kwargs.pop('save', False)
+        save = kwargs.pop('save', True)
         filename = kwargs.pop('filename', f"Histogram - N{self.N} - {q}")
         ext = kwargs.pop('ext', '.pdf')
         
@@ -260,7 +263,7 @@ class Model():
         ax.legend(loc='upper left')
         ax.grid(alpha=0.5)
         
-        ax.set_xlabel(log10*"$\log_{10}$" + LTX[q], fontsize=16)
+        ax.set_xlabel(log10*r"$\log_{10}$" + LTX[q], fontsize=16)
         ax.set_ylabel("Normalized Frequency", fontsize=16)
         ax.text(0.9, 0.9, rf"$N = {self.N}$", fontsize=20, horizontalalignment='center', verticalalignment='center', transform = ax.transAxes)
         ax.tick_params(labelsize=16)
@@ -277,7 +280,7 @@ class Model():
         
         dpi = kwargs.pop('dpi', 400)
         figsize = kwargs.pop('figsize', (8,6))
-        save = kwargs.pop('save', False)
+        save = kwargs.pop('save', True)
         filename = kwargs.pop('filename', f"Scatterplot - N{self.N} - {q1} v {q2}")
         ext = kwargs.pop('ext', '.pdf')
         
@@ -299,8 +302,8 @@ class Model():
         ax.legend()
         ax.grid(alpha=0.5)
         
-        ax.set_xlabel(log10[0]*"$\log_{10}$" + LTX[q1], fontsize=16)
-        ax.set_ylabel(log10[1]*"$\log_{10}$" + LTX[q2], fontsize=16)
+        ax.set_xlabel(log10[0]*r"$\log_{10}$" + LTX[q1], fontsize=16)
+        ax.set_ylabel(log10[1]*r"$\log_{10}$" + LTX[q2], fontsize=16)
         ax.text(0.9, 0.9, rf"$N = {self.N}$", fontsize=20, horizontalalignment='center', verticalalignment='center', transform = ax.transAxes)
         ax.tick_params(labelsize=16)
         ax.locator_params(axis='x', nbins=6)
@@ -317,7 +320,7 @@ class Model():
         dpi = kwargs.pop('dpi', 400)
         figsize = kwargs.pop('figsize', (8,6))
         levels = kwargs.pop('levels', 2)
-        save = kwargs.pop('save', False)
+        save = kwargs.pop('save', True)
         filename = kwargs.pop('filename', f"KDE - N{self.N} - {q1} v {q2}")
         ext = kwargs.pop('ext', '.pdf')
         
@@ -348,8 +351,8 @@ class Model():
             mu2, var2 = self.cultivation(q2, log10[1])
             ax.scatter([mu1], [mu2], marker='*', color='r', label="Weighted Mean", zorder=10)
         
-        ax.set_xlabel(log10[0]*"$\log_{10}$" + LTX[q1], fontsize=16)
-        ax.set_ylabel(log10[1]*"$\log_{10}$" + LTX[q2], fontsize=16)
+        ax.set_xlabel(log10[0]*r"$\log_{10}$" + LTX[q1], fontsize=16)
+        ax.set_ylabel(log10[1]*r"$\log_{10}$" + LTX[q2], fontsize=16)
         ax.text(0.9, 0.9, rf"$N = {self.N}$", color='white', fontsize=20, horizontalalignment='center', verticalalignment='center', transform = ax.transAxes)
         ax.tick_params(labelsize=16)
         ax.locator_params(axis='x', nbins=6)
@@ -366,7 +369,7 @@ class Model():
         dpi = kwargs.pop('dpi', 400)
         figsize = kwargs.pop('figsize', (16,6))
         levels = kwargs.pop('levels', 2)
-        save = kwargs.pop('save', False)
+        save = kwargs.pop('save', True)
         filename = kwargs.pop('filename', f"Scatterplot and KDE - N{self.N} - {q1} v {q2}")
         ext = kwargs.pop('ext', '.pdf')
         
@@ -388,7 +391,7 @@ class Model():
         dpi = kwargs.pop('dpi', 400)
         figsize = kwargs.pop('figsize', (8.5*2.5,8.5*2.5))
         levels = kwargs.pop('levels', 2)
-        save = kwargs.pop('save', False)
+        save = kwargs.pop('save', True)
         filename = kwargs.pop('filename', f"Triangle of Correlations - N{self.N}")
         ext = kwargs.pop('ext', '.pdf')
         
@@ -427,7 +430,7 @@ class Model():
     
 def histGrid(Ms, qs=['A_s', 'n_s', 'n_t', 'r', 'beta_iso'], **kwargs):
     
-    save = kwargs.pop('save', False)
+    save = kwargs.pop('save', True)
     filename = kwargs.pop('filename', "Quantity Histograms")
     ext = kwargs.pop('ext', '.pdf')
     
@@ -471,9 +474,9 @@ RELEVANT GLOBAL MODEL VARIABLES
 
 
 
-M1 = Model(path, 30, 5e-9, 1)
+#M1 = Model(path, 30, 5e-9, 1)
 M2 = Model(path, 30, 5e-9, 2)
-M3 = Model(path, 30, 5e-9, 3)
+#M3 = Model(path, 30, 5e-9, 3)
         
         
         
